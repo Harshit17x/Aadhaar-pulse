@@ -221,7 +221,10 @@ def main():
     
     with st.sidebar.expander("⚙️ Advanced Map Settings", expanded=False):
         use_system_loc = st.checkbox("Use System Location", value=False, help="Center map on your current real location")
-        map_style = st.selectbox("Map Style", ["Streets", "Dark", "Light", "Satellite"], index=1)
+    
+    with st.sidebar.expander("🤖 AI Assistant Settings", expanded=False):
+        st.markdown("To use the AI on other devices, expose your local Ollama port (11434) using a tool like ngrok and paste the URL below.")
+        ollama_url = st.text_input("Ollama API URL", value="http://localhost:11434", help="Public URL for your local Ollama server")
     
     # Activity View Selection
     st.sidebar.markdown("---")
@@ -608,8 +611,8 @@ def main():
             The assistant has access to the **currently filtered data** context.
         """)
 
-        # Initialize Chatbot and Context
-        ollama = OllamaClient()
+        # Initialize Chatbot with dynamic URL
+        ollama = OllamaClient(base_url=ollama_url)
         
         # Prepare context for the LLM
         context_summary = {

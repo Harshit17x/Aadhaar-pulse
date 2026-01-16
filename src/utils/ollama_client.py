@@ -5,8 +5,9 @@ import logging
 class OllamaClient:
     def __init__(self, model="aadhaar-pulse-expert", base_url="http://localhost:11434"):
         self.model = model
-        self.base_url = base_url
-        self.api_url = f"{base_url}/api/chat"
+        # Remove trailing slash if present
+        self.base_url = base_url.rstrip('/')
+        self.api_url = f"{self.base_url}/api/chat"
 
     def chat(self, messages, stream=False):
         """

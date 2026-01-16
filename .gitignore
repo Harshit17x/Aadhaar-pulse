@@ -2,10 +2,10 @@ venv/
 __pycache__/
 *.pyc
 .env
-data/*.csv
-data/*.json
+# Keep processed data for deployment
+data/raw_aadhaar_logs.csv
 .DS_Store
-.streamlit/
+# .streamlit/config.toml (Include this for deployment)
 verify_*.py
 create_expert_model.sh
 Modelfile

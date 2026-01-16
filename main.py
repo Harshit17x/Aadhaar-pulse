@@ -668,12 +668,20 @@ def main():
                 
                 with st.spinner("Analyzing..."):
                     # Use streaming for better UX
-                    for chunk in ollama.chat(ollama_messages, stream=True):
-                        full_response += chunk
-                        message_placeholder.markdown(full_response + "▌")
-                    message_placeholder.markdown(full_response)
+                    response_gen = ollama.chat(ollama_messages, stream=True)
+                    
+                    if isinstance(response_gen, str) and response_gen.startswith("Error:"):
+                        st.error("⚠️ **Ollama AI Assistant is currently unavailable on the web.**")
+                        st.info("To use the AI Assistant, please run the app locally with Ollama installed.")
+                        full_response = response_gen
+                    else:
+                        for chunk in response_gen:
+                            full_response += chunk
+                            message_placeholder.markdown(full_response + "▌")
+                        message_placeholder.markdown(full_response)
                 
-            st.session_state.messages.append({"role": "assistant", "content": full_response})
+            if not full_response.startswith("Error:"):
+                st.session_state.messages.append({"role": "assistant", "content": full_response})
 
         if st.sidebar.button("Clear Chat History", key="clear_chat"):
             st.session_state.messages = []

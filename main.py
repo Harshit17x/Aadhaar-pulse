@@ -19,7 +19,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from generation.mock_data import generate_mock_data
 from models.forecast import get_forecast, generate_forecast_insights
-from utils.ollama_client import OllamaClient
+from utils.ollama_client import HybridAIClient
 
 st.set_page_config(page_title="Aadhaar Pulse", layout="wide")
 
@@ -221,10 +221,19 @@ def main():
     
     with st.sidebar.expander("⚙️ Advanced Map Settings", expanded=False):
         use_system_loc = st.checkbox("Use System Location", value=False, help="Center map on your current real location")
+        map_style_option = st.selectbox("Map Style", ["Streets", "Dark", "Satellite", "Hybrid", "Topo"], index=1)
     
     with st.sidebar.expander("🤖 AI Assistant Settings", expanded=False):
-        st.markdown("To use the AI on other devices, expose your local Ollama port (11434) using a tool like ngrok and paste the URL below.")
-        ollama_url = st.text_input("Ollama API URL", value="http://localhost:11434", help="Public URL for your local Ollama server")
+        ai_provider = st.radio("AI Provider", ["Local Ollama", "Cloud AI (Groq)"], index=0)
+        
+        if ai_provider == "Local Ollama":
+            st.markdown("Expose port 11434 via ngrok for multi-device access.")
+            ollama_url = st.text_input("Ollama API URL", value="http://localhost:11434")
+            groq_key = None
+        else:
+            st.markdown("Works on all devices. No local setup needed.")
+            groq_key = st.text_input("Groq API Key", type="password", help="Get at console.groq.com")
+            ollama_url = "http://localhost:11434"
     
     # Activity View Selection
     st.sidebar.markdown("---")
@@ -611,8 +620,9 @@ def main():
             The assistant has access to the **currently filtered data** context.
         """)
 
-        # Initialize Chatbot with dynamic URL
-        ollama = OllamaClient(base_url=ollama_url)
+        # Initialize Hybrid Chatbot
+        ai_client = HybridAIClient(base_url=ollama_url, groq_api_key=groq_key)
+        provider_slug = "ollama" if ai_provider == "Local Ollama" else "groq"
         
         # Prepare context for the LLM
         context_summary = {
@@ -671,11 +681,14 @@ def main():
                 
                 with st.spinner("Analyzing..."):
                     # Use streaming for better UX
-                    response_gen = ollama.chat(ollama_messages, stream=True)
+                    response_gen = ai_client.chat(ollama_messages, stream=True, provider=provider_slug)
                     
                     if isinstance(response_gen, str) and response_gen.startswith("Error:"):
-                        st.error("⚠️ **Ollama AI Assistant is currently unavailable on the web.**")
-                        st.info("To use the AI Assistant, please run the app locally with Ollama installed.")
+                        if provider_slug == "ollama":
+                            st.error("⚠️ **Ollama AI is offline.**")
+                            st.info("Switch to **Cloud AI (Groq)** in the sidebar for multi-device support.")
+                        else:
+                            st.error(f"⚠️ **AI Error:** {response_gen}")
                         full_response = response_gen
                     else:
                         for chunk in response_gen:

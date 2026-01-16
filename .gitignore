@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+*.pyc
+.env
+data/*.csv
+data/*.json
+.DS_Store
+.streamlit/
+verify_*.py
+create_expert_model.sh
+Modelfile
+walkthrough.md
+implementation_plan.md
+task.md

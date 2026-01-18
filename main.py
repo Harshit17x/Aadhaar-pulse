@@ -232,7 +232,12 @@ def main():
             groq_key = None
         else:
             st.markdown("Works on all devices. No local setup needed.")
-            groq_key = st.text_input("Groq API Key", type="password", help="Get at console.groq.com")
+            groq_key = st.text_input(
+                "Groq API Key", 
+                type="password", 
+                value=os.environ.get("GROQ_API_KEY", ""),
+                help="Get at console.groq.com"
+            )
             ollama_url = "http://localhost:11434"
     
     # Activity View Selection
